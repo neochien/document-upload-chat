@@ -45,29 +45,31 @@ export function scrollToBottom(vm) {
   });
 }
 
-export async function uploadFileForOCR(vm, event) {
+export async function uploadFileForOCR(context, file) {
   const formData = new FormData();
-  formData.append("file", event.target.files[0]);
+  formData.append("files", file);
 
   try {
-    const response = await fetch(`${BASE_URL}/upload/`, {
+    const response = await fetch(`${context.baseURL}/upload/`, {
       method: "POST",
       body: formData,
     });
 
-    const data = await response.json();
-    if (data.filename) {
-      console.log("OCR 解析結果:", data.text);
-      vm.ocrResult = data.text; // 儲存 OCR 結果
-      vm.uploadedFileName = data.filename; // 儲存上傳檔案名稱
-      console.log("已儲存檔案名稱:", vm.uploadedFileName); // 確認檔案名稱是否更新
-      vm.fetchFiles(); // 確保檔案列表是最新的
-      alert("文件上傳成功");
-    } else {
-      console.error("OCR 解析失敗:", data);
+    if (!response.ok) {
+      throw new Error(`Failed to upload file: ${response.statusText}`);
     }
+
+    const result = await response.json();
+    console.log("Server response:", result); // 在控制台查看服务器返回的响应
+    if (!result.results || !result.results[0] || !result.results[0].text) {
+      console.error("OCR result missing 'text' property");
+    } else {
+      console.log("OCR text:", result.results[0].text); // 确保正确解析 text 属性
+    }
+    return result; // 确保返回结果对象
   } catch (error) {
-    console.error("OCR API 呼叫失敗:", error);
+    console.error("Error uploading file:", error);
+    return { text: "Error processing file" }; // 返回一个默认的错误结果
   }
 }
 

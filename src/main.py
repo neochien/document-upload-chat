@@ -96,23 +96,30 @@ def save_ocr_data(filename, data):
 
 
 @app.post("/upload/")
-async def upload_and_process_file(file: UploadFile = File(...)):
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
+async def upload_and_process_files(files: List[UploadFile] = File(...)):
+    results = []
 
-    # 存檔案
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    for file in files:
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
 
-    # OCR 處理
-    extracted_text = process_file(file_path)
+        # 存檔案
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
 
-    # 移除檔案 (可選，避免佔用磁碟空間)
-    # os.remove(file_path)
+        # OCR 處理
+        extracted_text = process_file(file_path)
+        print(f"Extracted text for {file.filename}: {extracted_text}")  # 增加日志记录
 
-    # 保存 OCR 結果到單獨的 JSON 文件
-    save_ocr_data(file.filename, {"text": extracted_text})
+        # 移除檔案 (可選，避免佔用磁碟空間)
+        # os.remove(file_path)
 
-    return {"filename": file.filename, "text": extracted_text}
+        # 保存 OCR 結果到單獨的 JSON 文件
+        save_ocr_data(file.filename, {"text": extracted_text})
+
+        results.append({"filename": file.filename, "text": extracted_text})
+
+    print(f"Returning results: {results}")  # 增加日志记录
+    return {"results": results}
 
 
 
