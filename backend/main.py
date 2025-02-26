@@ -12,9 +12,13 @@ from PIL import Image
 from fastapi.middleware.cors import CORSMiddleware
 from ocr_utils import process_file
 import json
+from fastapi.staticfiles import StaticFiles
+import uvicorn
 
 
 app = FastAPI()
+# 提供靜態檔案
+# app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 # 設定 CORS 策略
 origins = [
@@ -49,7 +53,7 @@ custom_config = r'--oem 3 --psm 6'
 
 @app.get("/")
 def read_root():
-    return {"message": "Hello World"}
+    return {"message": "Hello, World!"}
 
 
 @app.get("/files")
@@ -292,3 +296,6 @@ def process_files():
     # 假設 `filename` 是檔案名稱，`text` 是從檔案中提取的內容
     answer = send_file_to_openai(filename, text)  # 傳遞檔案和問題給 OpenAI
     return answer
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

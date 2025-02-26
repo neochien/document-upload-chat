@@ -1,4 +1,4 @@
-const BASE_URL = "http://127.0.0.1:8000"; // 定義基礎 URL
+const BASE_URL = "http://localhost:8000"; // Docker Compose 內部網路名稱
 
 export async function fetchFiles(vm) {
   try {
