@@ -12,8 +12,13 @@ COPY requirements.txt .
 
 # 安裝系統依賴
 RUN apt-get update && apt-get install -y \
+    libreoffice \
     tesseract-ocr \
-    poppler-utils
+    tesseract-ocr-eng \
+    tesseract-ocr-chi-sim \
+    tesseract-ocr-chi-tra \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
 
 # 安裝依賴
 COPY requirements.txt .
