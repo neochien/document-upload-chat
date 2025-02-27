@@ -76,6 +76,7 @@ import {
   uploadFileForOCR,
   deleteFile,
 } from "./methods.js";
+import Swal from "sweetalert2";
 
 export default {
   data() {
@@ -136,8 +137,22 @@ export default {
     },
 
     async uploadFiles(event) {
+      const allowedTypes = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/png", "image/jpeg"];
       const files = event.target.files;
+      
       if (!files.length) return;
+
+      for (let file of files) {
+        if (!allowedTypes.includes(file.type)) {
+          Swal.fire({
+            title: "無效的檔案類型",
+            text: "僅允許上傳 PDF、DOCX、PNG、JPEG 檔案。",
+            icon: "error",
+            confirmButtonText: "確定",
+          });
+          return; // 阻止上傳
+        }
+      }
 
       this.isUploading = true; // 顯示 Loading 畫面
       this.uploadedFiles = [];
@@ -145,12 +160,7 @@ export default {
 
       for (let i = 0; i < files.length; i++) {
         const result = await uploadFileForOCR(this, files[i]);
-        if (
-          result &&
-          result.results &&
-          result.results[0] &&
-          result.results[0].text
-        ) {
+        if (result && result.results && result.results[0] && result.results[0].text) {
           this.uploadedFiles.push(files[i].name);
           this.ocrResult += `文件 ${files[i].name} 的結果:\n${result.results[0].text}\n\n`;
         } else {
@@ -159,7 +169,13 @@ export default {
       }
 
       this.isUploading = false; // 隱藏 Loading 畫面
-      alert("所有文件上傳成功！");
+      Swal.fire({
+        title: "成功！",
+        text: "所有文件上傳成功！",
+        icon: "success",
+        confirmButtonText: "確定",
+      });
+
       this.fetchFiles();
     },
 
@@ -175,11 +191,22 @@ export default {
       await deleteFile(this, file);
     },
     confirmDelete(file) {
-      const confirmed = confirm("確定要刪除嗎？");
-      if (confirmed) {
+    Swal.fire({
+      title: "確定要刪除嗎？",
+      text: "刪除後將無法恢復！",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "確定刪除",
+      cancelButtonText: "取消",
+    }).then((result) => {
+      if (result.isConfirmed) {
         this.deleteFile(file);
+        Swal.fire("已刪除！", "你的文件已被刪除。", "success");
       }
-    },
+    });
+  },
   },
 };
 </script>

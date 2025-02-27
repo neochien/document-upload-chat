@@ -1,5 +1,6 @@
 import os
 import time
+import subprocess
 from pdf2image import convert_from_path
 import pytesseract
 from docx2pdf import convert
@@ -16,11 +17,23 @@ def extract_text_from_pdf(pdf_path):
 
 def extract_text_from_docx_with_ocr(docx_path):
     pdf_path = docx_path.replace('.docx', '.pdf')
+    
     try:
-        convert(docx_path, pdf_path)
+        # 使用 LibreOffice 進行 DOCX → PDF 轉換
+        subprocess.run([
+            "libreoffice", "--headless", "--convert-to", "pdf",
+            "--outdir", os.path.dirname(docx_path), docx_path
+        ], check=True)
+
         text = extract_text_from_pdf(pdf_path)
-        os.remove(pdf_path)  # 清理轉換的 PDF 檔案
+
+        # 清理轉換的 PDF 文件
+        os.remove(pdf_path)
         return text
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error converting {docx_path} to PDF: {e}")
+        return ""
     except Exception as e:
         print(f"Error processing {docx_path}: {e}")
         return ""
